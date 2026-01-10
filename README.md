@@ -3,5 +3,5 @@ a sorcerer-themed project which searches for fighting against literacy for teens
 PISA tests and other standards.
 
 Focusing in two areas
-  Mathematics
+  Mathematics and 
   Reading & Writing
