@@ -22,7 +22,7 @@ function LandingPage({ onSubjectSelect }: LandingPageProps) {
                 <Wand2 className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-yellow-300 bg-clip-text text-transparent">
-                MysticHub
+                Lit(eracy) up the Fire
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
@@ -72,7 +72,7 @@ function LandingPage({ onSubjectSelect }: LandingPageProps) {
 
       <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Why Choose MysticHub?</h2>
+          <h2 className="text-4xl font-bold text-white mb-4">Why Choose Lit(eracy) up the Fire?</h2>
           <p className="text-lg text-purple-300">Harness the ancient powers of knowledge and magic</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
@@ -220,7 +220,7 @@ function LandingPage({ onSubjectSelect }: LandingPageProps) {
               </span>
             </div>
             <div className="text-purple-300 text-sm">
-              © 2026 MysticHub. Unleashing the magic within every learner.
+              © 2026 Lit(eracy) up the Fire. Unleashing the magic within every learner.
             </div>
           </div>
         </div>
