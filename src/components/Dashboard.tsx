@@ -3,13 +3,14 @@ import { BookOpen, Calculator, Home, ChevronRight, Award, Clock, TrendingUp, Loc
 interface DashboardProps {
   subject: 'english' | 'math' | null;
   onBackToHome: () => void;
+  onLessonSelect: (lessonId: number, subject: 'english' | 'math') => void;
 }
 
-function Dashboard({ subject, onBackToHome }: DashboardProps) {
+function Dashboard({ subject, onBackToHome, onLessonSelect }: DashboardProps) {
   const isEnglish = subject === 'english';
 
   const englishLessons = [
-    { id: 1, title: 'The Alphabet', description: 'Learn all 26 letters and their sounds', level: 'Beginner', progress: 0, locked: false, runes: 50 },
+    { id: 1, title: 'How Writing Began', description: 'Discover the ancient origins of written language', level: 'Beginner', progress: 0, locked: false, runes: 50 },
     { id: 2, title: 'Basic Phonics', description: 'Understanding letter sounds and combinations', level: 'Beginner', progress: 0, locked: false, runes: 75 },
     { id: 3, title: 'Simple Words', description: 'Building your first vocabulary', level: 'Beginner', progress: 0, locked: false, runes: 100 },
     { id: 4, title: 'Basic Grammar', description: 'Nouns, verbs, and sentence structure', level: 'Beginner', progress: 0, locked: true, runes: 120 },
@@ -18,7 +19,7 @@ function Dashboard({ subject, onBackToHome }: DashboardProps) {
   ];
 
   const mathLessons = [
-    { id: 1, title: 'How to Count On', description: 'Recognizing and counting basic numbers', level: 'Beginner', progress: 0, locked: false, runes: 50 },
+    { id: 1, title: 'The Magic of Counting', description: 'Discover how humans learned to count and use numbers', level: 'Beginner', progress: 0, locked: false, runes: 50 },
     { id: 2, title: 'Whimsical Navigation', description: 'Learning to add simple numbers', level: 'Beginner', progress: 0, locked: false, runes: 75 },
     { id: 3, title: 'Rational Point of View', description: 'Understanding other types of numbers', level: 'Beginner', progress: 0, locked: false, runes: 100 },
     { id: 4, title: 'Enchanted Multiplication', description: 'Coming Soon', level: 'Beginner', progress: 0, locked: true, runes: 120 },
@@ -131,6 +132,7 @@ function Dashboard({ subject, onBackToHome }: DashboardProps) {
               <button
                 key={lesson.id}
                 disabled={lesson.locked}
+                onClick={() => !lesson.locked && subject && onLessonSelect(lesson.id, subject)}
                 className={`relative group transition-all transform hover:scale-105 ${lesson.locked ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl'}`}
               >
                 <div className={`absolute inset-0 rounded-2xl ${isEnglish ? 'bg-gradient-to-br from-purple-600 to-pink-600' : 'bg-gradient-to-br from-yellow-500 to-yellow-600'} opacity-0 group-hover:opacity-20 transition-opacity blur-lg`}></div>
