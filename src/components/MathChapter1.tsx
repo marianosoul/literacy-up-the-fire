@@ -1,75 +1,83 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
-interface WritingChapterProps {
+interface MathChapter1Props {
   onBack: () => void;
 }
 
-function WritingChapter({ onBack }: WritingChapterProps) {
+interface Sheep {
+  id: number;
+  x: number;
+  y: number;
+}
+
+function MathChapter1({ onBack }: MathChapter1Props) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [game1Count, setGame1Count] = useState(0);
+  const [countedSheep, setCountedSheep] = useState<Set<number>>(new Set());
+  const [game1Sheep, setGame1Sheep] = useState<Sheep[]>([]);
+  const [game2Count, setGame2Count] = useState(0);
+  const [game2Sheep, setGame2Sheep] = useState<Sheep[]>([]);
+  
+  // Estados para Ejercicios Duolingo
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
 
-  const totalSlides = 9;
+  const totalSlides = 11; // 7 de historia/juego + 3 de ejercicios + 1 final
 
-  // Lógica de dibujo para la tablilla de arcilla
   useEffect(() => {
-    if (currentSlide === 2 && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#4a148c';
-      }
-    }
+    if (currentSlide === 2) initGame1();
+    if (currentSlide === 4) initGame2();
     setSelectedOption(null);
     setFeedback(null);
   }, [currentSlide]);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsDrawing(true);
-    draw(e);
+  // Movimiento de ovejas en el reto del caos
+  useEffect(() => {
+    if (currentSlide === 4) {
+      const interval = setInterval(() => {
+        setGame2Sheep(prev =>
+          prev.map(sheep => ({
+            ...sheep,
+            x: Math.max(5, Math.min(85, sheep.x + (Math.random() - 0.5) * 6)),
+            y: Math.max(5, Math.min(80, sheep.y + (Math.random() - 0.5) * 6))
+          }))
+        );
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [currentSlide]);
+
+  const initGame1 = () => {
+    const newSheep = Array.from({ length: 5 }, (_, i) => ({
+      id: i, x: Math.random() * 70 + 15, y: Math.random() * 50 + 25
+    }));
+    setGame1Sheep(newSheep);
+    setGame1Count(0);
+    setCountedSheep(new Set());
   };
 
-  const stopDrawing = () => {
-    setIsDrawing(false);
-    canvasRef.current?.getContext('2d')?.beginPath();
+  const initGame2 = () => {
+    const newSheep = Array.from({ length: 20 }, (_, i) => ({
+      id: i, x: Math.random() * 80 + 10, y: Math.random() * 70 + 10
+    }));
+    setGame2Sheep(newSheep);
+    setGame2Count(0);
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ('touches' in e ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = ('touches' in e ? e.touches[0].clientY : e.clientY) - rect.top;
-
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const checkAnswer = (isCorrect: boolean, index: number) => {
+  const checkExercise = (isCorrect: boolean, index: number) => {
     setSelectedOption(index);
     setFeedback(isCorrect ? 'correct' : 'wrong');
   };
 
   const moveNext = () => {
-    if (currentSlide < totalSlides - 1) {
-      setCurrentSlide(prev => prev + 1);
-    }
+    if (currentSlide < totalSlides - 1) setCurrentSlide(prev => prev + 1);
   };
 
   return (
-    <div style={{ margin: 0, padding: 0, height: '100vh', fontFamily: "'Nunito', sans-serif", background: 'linear-gradient(160deg, #1a0633 0%, #4a148c 100%)', color: '#ffffff', overflow: 'hidden' }}>
+    <div style={{ margin: 0, padding: 0, height: '100vh', fontFamily: "'Nunito', sans-serif", background: 'linear-gradient(135deg, #1a0633 0%, #4a148c 100%)', color: '#ffffff', overflow: 'hidden' }}>
       
       {/* Barra de Progreso */}
-      <div style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', width: '70%', height: '12px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', zIndex: 10 }}>
+      <div style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', width: '75%', height: '12px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', zIndex: 10 }}>
         <div style={{ width: `${((currentSlide + 1) / totalSlides) * 100}%`, height: '100%', background: '#ffb800', borderRadius: '10px', transition: 'width 0.4s ease' }}></div>
       </div>
 
@@ -85,91 +93,87 @@ function WritingChapter({ onBack }: WritingChapterProps) {
             display: 'flex', flexDirection: 'column', alignItems: 'center'
           }}>
             
-            {/* Historia Unificada */}
+            {/* --- SECCIÓN HISTORIA --- */}
             {idx === 0 && (
               <>
-                <h1 style={{ color: '#ffb800', fontSize: '2.5rem' }}>How Writing Began</h1>
-                <p style={{ fontSize: '1.3rem', lineHeight: '1.6' }}>A very long time ago, before books, paper, or pencils, people still needed to remember things.</p>
-                <p style={{ fontSize: '1.3rem' }}>They needed to track: <span style={{ color: '#ffb800', fontWeight: 900 }}>trades, food, stories, and promises.</span></p>
-                <p>Talking was not always enough.</p>
+                <h1 style={{ color: '#ffb800', fontSize: '3rem' }}>The Magic of Counting</h1>
+                <p style={{ fontSize: '1.4rem' }}>Long ago, before schools existed, humans already needed to count.</p>
+                <p>It wasn't for homework... <span style={{ color: '#ffb800', fontWeight: 900 }}>It was to survive.</span></p>
               </>
             )}
 
             {idx === 1 && (
               <>
-                <h2 style={{ color: '#ffb800' }}>The First Step: Pictures</h2>
-                <p style={{ fontSize: '1.3rem' }}>Humans invented writing, and it started with something simple: <span style={{ fontWeight: 900 }}>Drawing.</span></p>
-                <div style={{ display: 'flex', gap: '20px', margin: '20px 0' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '15px' }}>🐑<br/>Sheep</div>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '15px' }}>🌾<br/>Food</div>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '15px', borderRadius: '15px' }}>🏠<br/>Home</div>
-                </div>
-                <p>These were called <span style={{ color: '#ffb800', fontWeight: 900 }}>Pictograms</span>. One drawing = One object.</p>
+                <p style={{ fontSize: '1.4rem' }}>We started by making marks: one line for one thing.</p>
+                <div style={{ fontSize: '3rem', color: '#ffb800', margin: '20px 0', letterSpacing: '8px' }}>I II III IIII</div>
+                <p>We call these <span style={{ color: '#ffb800', fontWeight: 900 }}>Units</span>.</p>
               </>
             )}
 
             {idx === 2 && (
               <>
-                <h3>Try to be a Scribe!</h3>
-                <p>Draw a pictogram for a "Tool" on this clay tablet:</p>
-                <canvas 
-                  ref={canvasRef} width={300} height={200}
-                  onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
-                  style={{ background: '#fff9e6', borderRadius: '15px', cursor: 'crosshair', touchAction: 'none', border: '4px solid #d4af37' }}
-                />
-                <button onClick={() => canvasRef.current?.getContext('2d')?.clearRect(0,0,300,200)} style={{ marginTop: '10px', background: 'none', border: '1px solid #fff', color: '#fff', padding: '5px 15px', borderRadius: '10px', cursor: 'pointer' }}>Clear Tablet</button>
-              </>
-            )}
-
-            {idx === 3 && (
-              <>
-                <h2 style={{ color: '#ffb800' }}>Ideograms</h2>
-                <p style={{ fontSize: '1.3rem' }}>Ancient cultures like <span style={{ color: '#ffb800' }}>Mesopotamia and Egypt</span> took it further.</p>
-                <p>They created <span style={{ fontWeight: 900 }}>Ideograms</span>: pictures that represented whole ideas, not just things.</p>
-                <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>(Drawing a Sun ☀️ could mean "Light" or "Day")</p>
-              </>
-            )}
-
-            {idx === 4 && (
-              <>
-                <h2 style={{ color: '#ffb800' }}>When Pictures Failed</h2>
-                <p style={{ fontSize: '1.3rem' }}>Drawing was beautiful, but <span style={{ color: '#ffb800', fontWeight: 900 }}>useless</span> for speed.</p>
-                <p>Imagine drawing a different picture for every word in your head. It was too slow and too difficult for complex trade.</p>
-              </>
-            )}
-
-            {idx === 5 && (
-              <>
-                <h2 style={{ color: '#ffb800' }}>The Sound Revolution</h2>
-                <p style={{ fontSize: '1.3rem' }}>The <span style={{ color: '#ffb800', fontWeight: 900 }}>Phoenicians</span> changed history. They created symbols that represented <span style={{ fontWeight: 900 }}>Sounds</span>, not objects.</p>
-                <p>This "Phonetic system" made writing fast, easy, and available for everyone.</p>
-              </>
-            )}
-
-            {/* Ejercicios Reafirmantes */}
-            {idx === 6 && (
-              <>
-                <h2 style={{ color: '#ffb800' }}>Quick Check</h2>
-                <p style={{ fontSize: '1.4rem' }}>What was the very first way humans "wrote" things down?</p>
-                <div style={{ width: '100%', marginTop: '20px' }}>
-                  {['By using pencils', 'By drawing Pictograms', 'By sending emails'].map((opt, i) => (
-                    <div key={i} onClick={() => checkAnswer(i === 1, i)} style={{ padding: '15px', margin: '10px 0', borderRadius: '12px', border: `2px solid ${selectedOption === i ? '#ffb800' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>{opt}</div>
+                <h3>Activity: Tap to Count</h3>
+                <div style={{ fontSize: '1.5rem', background: '#8e44ad', padding: '10px 30px', borderRadius: '50px', marginBottom: '15px' }}>Count: {game1Count}</div>
+                <div style={{ width: '100%', height: '300px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px', position: 'relative', overflow: 'hidden', border: '2px dashed #ffb800' }}>
+                  {game1Sheep.map(s => (
+                    <div key={s.id} onClick={() => { if(!countedSheep.has(s.id)) { setCountedSheep(new Set(countedSheep.add(s.id))); setGame1Count(c => c+1); } }} style={{ position: 'absolute', fontSize: '40px', left: `${s.x}%`, top: `${s.y}%`, cursor: 'pointer', opacity: countedSheep.has(s.id) ? 0.3 : 1 }}>🐑</div>
                   ))}
                 </div>
               </>
             )}
 
+            {idx === 3 && (
+              <>
+                <h1 style={{ color: '#ffb800' }}>The Ishango Bone</h1>
+                <div style={{ fontSize: '5rem' }}>🦴</div>
+                <p>This 20,000-year-old bone proves that counting is part of who we are.</p>
+              </>
+            )}
+
+            {idx === 4 && (
+              <>
+                <h3>The Chaos Challenge!</h3>
+                <p>Counting moving things is hard! Try to catch these 20 sheep.</p>
+                <div style={{ fontSize: '1.5rem', background: '#a67c00', padding: '10px 30px', borderRadius: '50px', marginBottom: '15px' }}>Caught: {game2Count} / 20</div>
+                <div style={{ width: '100%', height: '300px', background: 'rgba(0,0,0,0.2)', borderRadius: '20px', position: 'relative', overflow: 'hidden', border: '2px dashed #ffb800' }}>
+                  {game2Sheep.map(s => (
+                    <div key={s.id} onClick={() => { setGame2Sheep(game2Sheep.filter(sh => sh.id !== s.id)); setGame2Count(c => c+1); }} style={{ position: 'absolute', fontSize: '30px', left: `${s.x}%`, top: `${s.y}%`, cursor: 'pointer', transition: 'all 0.1s linear' }}>🐑</div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {idx === 5 && (
+              <>
+                <h1>Place Value</h1>
+                <p>Grouping numbers changed everything. Look at <span style={{ color: '#ffb800', fontWeight: 900 }}>345</span>:</p>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+                  {[{v:'3',l:'Hundreds'},{v:'4',l:'Tens'},{v:'5',l:'Units'}].map((item, i) => (
+                    <div key={i} style={{ background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '15px', border: '2px solid #8e44ad' }}>
+                      <h2 style={{ color: '#ffb800', margin: 0 }}>{item.v}</h2><p style={{ margin: 0 }}>{item.l}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {idx === 6 && (
+              <>
+                <h1>Small Magic</h1>
+                <p>What about things smaller than one? Like half a pizza?</p>
+                <h2 style={{ fontSize: '4rem', color: '#ffb800' }}>2.5</h2>
+                <p>Decimals let us count the <span style={{ color: '#ffb800' }}>unseen details</span> of the universe.</p>
+              </>
+            )}
+
+            {/* --- SECCIÓN EJERCICIOS DUOLINGO --- */}
             {idx === 7 && (
               <>
-                <h2 style={{ color: '#ffb800' }}>Why did Pictograms become "useless"?</h2>
+                <h2 style={{ color: '#ffb800' }}>Challenge Time!</h2>
+                <p style={{ fontSize: '1.4rem' }}>In the number <span style={{ color: '#ffb800', fontWeight: 900 }}>482</span>, which digit is in the <span style={{ borderBottom: '2px solid' }}>Tens</span> place?</p>
                 <div style={{ width: '100%', marginTop: '20px' }}>
-                  {[
-                    { t: 'They were too colorful', c: false },
-                    { t: 'Drawing every word was too slow/complex', c: true },
-                    { t: 'People forgot how to draw', c: false }
-                  ].map((opt, i) => (
-                    <div key={i} onClick={() => checkAnswer(opt.c, i)} style={{ padding: '15px', margin: '10px 0', borderRadius: '12px', border: `2px solid ${selectedOption === i ? '#ffb800' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>{opt.t}</div>
+                  {['4', '8', '2'].map((opt, i) => (
+                    <div key={i} onClick={() => checkAnswer(opt === '8', i)} style={{ padding: '18px', margin: '10px 0', borderRadius: '15px', border: `3px solid ${selectedOption === i ? '#ffb800' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(255,255,255,0.05)', cursor: 'pointer', fontSize: '1.3rem', transition: '0.2s' }}>{opt}</div>
                   ))}
                 </div>
               </>
@@ -177,10 +181,34 @@ function WritingChapter({ onBack }: WritingChapterProps) {
 
             {idx === 8 && (
               <>
-                <h1 style={{ fontSize: '4rem' }}>🖋️</h1>
-                <h2 style={{ color: '#ffb800' }}>Chapter Complete!</h2>
-                <p>You now know that writing isn't just school—it's how humanity remembers life.</p>
-                <button onClick={onBack} style={{ marginTop: '20px', background: '#ffb800', border: 'none', borderBottom: '4px solid #cc9300', padding: '15px 40px', borderRadius: '15px', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', color: '#4a148c' }}>BACK TO DASHBOARD</button>
+                <h2 style={{ color: '#ffb800' }}>Challenge 2</h2>
+                <p style={{ fontSize: '1.4rem' }}>What is the value of the 5 in <span style={{ color: '#ffb800', fontWeight: 900 }}>5.2</span>?</p>
+                <div style={{ width: '100%', marginTop: '20px' }}>
+                  {['5 Tenths', '5 Units', '5 Hundreds'].map((opt, i) => (
+                    <div key={i} onClick={() => checkAnswer(opt === '5 Units', i)} style={{ padding: '18px', margin: '10px 0', borderRadius: '15px', border: `3px solid ${selectedOption === i ? '#ffb800' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(255,255,255,0.05)', cursor: 'pointer', fontSize: '1.3rem' }}>{opt}</div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {idx === 9 && (
+              <>
+                <h2 style={{ color: '#ffb800' }}>Last One!</h2>
+                <p style={{ fontSize: '1.4rem' }}>Grouping <span style={{ color: '#ffb800' }}>10 Units</span> creates one...</p>
+                <div style={{ width: '100%', marginTop: '20px' }}>
+                  {['Ten', 'Hundred', 'Decimal'].map((opt, i) => (
+                    <div key={i} onClick={() => checkAnswer(opt === 'Ten', i)} style={{ padding: '18px', margin: '10px 0', borderRadius: '15px', border: `3px solid ${selectedOption === i ? '#ffb800' : 'rgba(255,255,255,0.1)'}`, background: 'rgba(255,255,255,0.05)', cursor: 'pointer', fontSize: '1.3rem' }}>{opt}</div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {idx === 10 && (
+              <>
+                <h1 style={{ fontSize: '4rem' }}>🏆</h1>
+                <h1 style={{ color: '#ffb800' }}>Mastered!</h1>
+                <p>You understand the story of numbers.</p>
+                <button onClick={onBack} style={{ marginTop: '20px', background: '#ffb800', border: 'none', borderBottom: '4px solid #cc9300', padding: '15px 40px', borderRadius: '15px', fontSize: '1.5rem', fontWeight: 900, cursor: 'pointer', color: '#4a148c' }}>BACK TO DASHBOARD</button>
               </>
             )}
 
@@ -188,28 +216,28 @@ function WritingChapter({ onBack }: WritingChapterProps) {
         ))}
       </div>
 
-      {/* Navegación Estándar (Slides 0-5) */}
-      {currentSlide < 6 && (
+      {/* Botón NEXT (Solo para historia) */}
+      {currentSlide < 7 && (
         <div style={{ position: 'fixed', bottom: '40px', right: '40px' }}>
-          <button onClick={moveNext} style={{ background: '#ffb800', border: 'none', borderBottom: '4px solid #cc9300', padding: '15px 40px', borderRadius: '15px', fontSize: '1.3rem', fontWeight: 900, cursor: 'pointer', color: '#4a148c' }}>CONTINUE ➜</button>
+          <button onClick={moveNext} style={{ background: '#ffb800', border: 'none', borderBottom: '4px solid #cc9300', padding: '15px 40px', borderRadius: '15px', fontSize: '1.4rem', fontWeight: 900, cursor: 'pointer', color: '#4a148c' }}>CONTINUE ➜</button>
         </div>
       )}
 
-      {/* Barra Duolingo para Ejercicios (Slides 6-7) */}
+      {/* BARRA DUOLINGO (Feedback) */}
       <div style={{ 
         position: 'fixed', bottom: feedback ? 0 : '-150px', left: 0, right: 0, 
-        height: '110px', background: feedback === 'correct' ? '#d7ffb8' : '#ffdfe0', 
+        height: '130px', background: feedback === 'correct' ? '#d7ffb8' : '#ffdfe0', 
         display: 'flex', alignItems: 'center', justifyContent: 'space-around', 
-        transition: 'bottom 0.3s ease', zIndex: 200 
+        transition: 'bottom 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)', zIndex: 200, borderTop: '2px solid rgba(0,0,0,0.1)' 
       }}>
         <h2 style={{ color: feedback === 'correct' ? '#58cc02' : '#ea2b2b', margin: 0 }}>
-          {feedback === 'correct' ? '✨ Awesome!' : '❌ Not quite right!'}
+          {feedback === 'correct' ? '✨ Brilliantly done!' : '❌ Not quite, try again!'}
         </h2>
         <button 
           onClick={() => { if(feedback === 'correct') moveNext(); else setFeedback(null); }}
-          style={{ background: feedback === 'correct' ? '#58cc02' : '#ea2b2b', color: '#fff', border: 'none', padding: '15px 40px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer' }}
+          style={{ background: feedback === 'correct' ? '#58cc02' : '#ea2b2b', color: '#fff', border: 'none', padding: '18px 50px', borderRadius: '15px', fontWeight: 900, cursor: 'pointer', fontSize: '1.2rem' }}
         >
-          {feedback === 'correct' ? 'CONTINUE' : 'TRY AGAIN'}
+          {feedback === 'correct' ? 'CONTINUE' : 'GOT IT'}
         </button>
       </div>
 
@@ -217,4 +245,4 @@ function WritingChapter({ onBack }: WritingChapterProps) {
   );
 }
 
-export default WritingChapter;
+export default MathChapter1;
